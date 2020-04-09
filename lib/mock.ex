@@ -56,8 +56,10 @@ defmodule Mock do
       end
   """
   defmacro with_mocks(mocks, do: test) do
+    expanded_mocks = Macro.expand(mocks, __CALLER__)
+
     quote do
-      mock_modules = mock_modules(unquote(mocks))
+      mock_modules = mock_modules(unquote(expanded_mocks))
 
       try do
         unquote(test)
@@ -279,6 +281,7 @@ defmodule Mock do
   # Helper macro to mock modules. Intended to be called only within this module
   # but not defined as `defmacrop` due to the scope within which it's used.
   defmacro mock_modules(mocks) do
+    mocks = Macro.expand(mocks, __CALLER__)
     quote do
       Enum.reduce(unquote(mocks), [], fn({m, opts, mock_fns}, ms) ->
         unless m in ms do
